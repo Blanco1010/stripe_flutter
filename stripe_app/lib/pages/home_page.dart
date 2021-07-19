@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_credit_card/credit_card_widget.dart';
 import 'package:stripe_app/data/cards.dart';
+import 'package:stripe_app/helpers/helpers.dart';
+import 'package:stripe_app/pages/card_page.dart';
 import 'package:stripe_app/widgets/total_pay_button.dart';
 
 class Homepage extends StatelessWidget {
@@ -14,7 +16,15 @@ class Homepage extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () async {
+              // showLoading(context);
+
+              // await Future.delayed(Duration(seconds: 1));
+
+              // Navigator.pop(context);
+
+              showAlert(context, 'Hola', 'Mundo');
+            },
             icon: Icon(Icons.payments),
           )
         ],
@@ -32,12 +42,21 @@ class Homepage extends StatelessWidget {
                 itemBuilder: (_, i) {
                   final card = cards[i];
 
-                  return CreditCardWidget(
-                      cardNumber: card.cardNumber,
-                      expiryDate: card.expiracyDate,
-                      cardHolderName: card.cardHolderName,
-                      cvvCode: card.cvv,
-                      showBackView: false);
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                          context, navigationFadeIn(context, CardPage()));
+                    },
+                    child: Hero(
+                      tag: card.cardNumber,
+                      child: CreditCardWidget(
+                          cardNumber: card.cardNumber,
+                          expiryDate: card.expiracyDate,
+                          cardHolderName: card.cardHolderName,
+                          cvvCode: card.cvv,
+                          showBackView: false),
+                    ),
+                  );
                 }),
           ),
           Positioned(
