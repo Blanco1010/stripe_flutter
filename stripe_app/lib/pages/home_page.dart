@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_credit_card/credit_card_widget.dart';
-import 'package:stripe_app/data/cards.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:stripe_app/bloc/pay/pay_bloc.dart';
+
 import 'package:stripe_app/helpers/helpers.dart';
 import 'package:stripe_app/pages/card_page.dart';
+import 'package:stripe_app/data/cards.dart';
+
+import 'package:flutter_credit_card/credit_card_widget.dart';
 import 'package:stripe_app/widgets/total_pay_button.dart';
 
 class Homepage extends StatelessWidget {
@@ -44,6 +48,9 @@ class Homepage extends StatelessWidget {
 
                   return GestureDetector(
                     onTap: () {
+                      final blocCard = BlocProvider.of<PayBloc>(context);
+                      blocCard.add(OnSelectCard(card));
+
                       Navigator.push(
                           context, navigationFadeIn(context, CardPage()));
                     },

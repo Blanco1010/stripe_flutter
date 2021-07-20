@@ -1,30 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_credit_card/credit_card_widget.dart';
-import 'package:stripe_app/models/card_credit.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:stripe_app/bloc/pay/pay_bloc.dart';
+
 import 'package:stripe_app/widgets/total_pay_button.dart';
+import 'package:flutter_credit_card/credit_card_widget.dart';
 
 class CardPage extends StatelessWidget {
-  final card = CardCredit(
-      cardNumberHidden: '4242',
-      cardNumber: '4242424242424242',
-      brand: 'visa',
-      cvv: '213',
-      expiracyDate: '01/25',
-      cardHolderName: 'Juan Camilo Blanco Martinez');
-
   @override
   Widget build(BuildContext context) {
+    final card = context.watch<PayBloc>().state.card;
     final size = MediaQuery.of(context).size;
     return Scaffold(
         appBar: AppBar(
           title: Text('Pagar'),
+          leading: IconButton(
+              onPressed: () {
+                final blocCard = BlocProvider.of<PayBloc>(context);
+                blocCard.add(OnDeactivateCard());
+
+                Navigator.pop(context);
+              },
+              icon: Icon(Icons.arrow_back_ios)),
           centerTitle: true,
         ),
         body: Stack(
           fit: StackFit.expand,
           children: [
             Hero(
-              tag: card.cardNumber,
+              tag: card!.cardNumber,
               child: CreditCardWidget(
                   cardNumber: card.cardNumber,
                   expiryDate: card.expiracyDate,

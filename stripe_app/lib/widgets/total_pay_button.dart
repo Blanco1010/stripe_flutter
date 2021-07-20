@@ -1,8 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:stripe_app/bloc/pay/pay_bloc.dart';
 
+//Evelyn es una toxica
 class TotalPayButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -31,7 +34,9 @@ class TotalPayButton extends StatelessWidget {
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.normal))
             ],
           ),
-          _BtnPay(),
+          BlocBuilder<PayBloc, PayState>(builder: (context, state) {
+            return _BtnPay(state);
+          }),
         ],
       ),
     );
@@ -39,9 +44,15 @@ class TotalPayButton extends StatelessWidget {
 }
 
 class _BtnPay extends StatelessWidget {
+  final PayState state;
+
+  const _BtnPay(this.state);
+
   @override
   Widget build(BuildContext context) {
-    return true ? buildButtonCredit(context) : buildAppleAndGoogle(context);
+    return state.activeCard
+        ? buildButtonCredit(context)
+        : buildAppleAndGoogle(context);
   }
 
   Widget buildButtonCredit(BuildContext context) {
