@@ -7,9 +7,12 @@ import 'package:stripe_app/pages/card_page.dart';
 import 'package:stripe_app/data/cards.dart';
 
 import 'package:flutter_credit_card/credit_card_widget.dart';
+import 'package:stripe_app/services/stripe_services.dart';
 import 'package:stripe_app/widgets/total_pay_button.dart';
 
 class Homepage extends StatelessWidget {
+  final stripeService = new StripeService();
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -21,13 +24,29 @@ class Homepage extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: () async {
+              final paymentBloc = BlocProvider.of<PayBloc>(context);
+
+              final amount = paymentBloc.state.amountPayString;
+              final currency = paymentBloc.state.money;
+
+              final resp = await this.stripeService.paymentWithNewCard(
+                    amount: amount,
+                    currency: currency,
+                  );
+
+              if (resp.ok) {
+                showAlert(context, 'Tarjeta OK', 'Todo correcto');
+              } else {
+                showAlert(context, 'Algo salío mal', resp.msg);
+              }
+
               // showLoading(context);
 
               // await Future.delayed(Duration(seconds: 1));
 
               // Navigator.pop(context);
 
-              showAlert(context, 'Hola', 'Mundo');
+              // showAlert(context, 'Hola', 'Mundo');
             },
             icon: Icon(Icons.payments),
           )

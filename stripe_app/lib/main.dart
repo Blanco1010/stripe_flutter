@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:stripe_app/services/stripe_services.dart';
+
 import 'package:stripe_app/bloc/pay/pay_bloc.dart';
 import 'package:stripe_app/routers/routers.dart';
 
@@ -8,9 +11,11 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    // create a instance
+    final stripeService = new StripeService()..init();
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => PayBloc()),

@@ -7,6 +7,8 @@ class PayState {
   final bool activeCard; // if the card is active can to pay
   final CardCredit? card; // the attributes of card
 
+  String get amountPayString => '${(this.amountPay * 100).floor()}';
+
   PayState({
     this.amountPay = 375.5,
     this.money = 'USD',
