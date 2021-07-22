@@ -24,6 +24,8 @@ class Homepage extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: () async {
+              showLoading(context);
+
               final paymentBloc = BlocProvider.of<PayBloc>(context);
 
               final amount = paymentBloc.state.amountPayString;
@@ -33,6 +35,8 @@ class Homepage extends StatelessWidget {
                     amount: amount,
                     currency: currency,
                   );
+
+              Navigator.pop(context);
 
               if (resp.ok) {
                 showAlert(context, 'Tarjeta OK', 'Todo correcto');

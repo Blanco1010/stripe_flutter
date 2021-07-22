@@ -1,15 +1,21 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import 'package:stripe_app/bloc/pay/pay_bloc.dart';
+import 'package:stripe_app/services/stripe_services.dart';
+
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:stripe_app/helpers/helpers.dart';
+import 'package:stripe_payment/stripe_payment.dart';
 
 //Evelyn es una toxica
 class TotalPayButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    final payBloc = BlocProvider.of<PayBloc>(context).state;
+
     return Container(
       width: width,
       height: 80,
@@ -30,7 +36,7 @@ class TotalPayButton extends StatelessWidget {
                 'Total',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              Text('250.55 USD',
+              Text('${payBloc.amountPay} ${payBloc.money}',
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.normal))
             ],
           ),
@@ -76,7 +82,31 @@ class _BtnPay extends StatelessWidget {
             ),
           ],
         ),
-        onPressed: () {},
+        onPressed: () async {
+          showLoading(context);
+
+          final stripeService = new StripeService();
+          final state = BlocProvider.of<PayBloc>(context).state;
+          final card = state.card;
+          final monthYears = card!.expiracyDate.split('/');
+
+          final resp = await stripeService.paymentWithCardExist(
+            amount: state.amountPayString,
+            currency: state.money,
+            card: CreditCard(
+              number: card.cardNumber,
+              expMonth: int.parse(monthYears[0]),
+              expYear: int.parse(monthYears[1]),
+            ),
+          );
+          Navigator.pop(context);
+
+          if (resp.ok) {
+            showAlert(context, 'Tarjeta OK', 'Todo correcto');
+          } else {
+            showAlert(context, 'Algo salío mal', resp.msg);
+          }
+        },
       ),
     );
   }
@@ -104,7 +134,15 @@ class _BtnPay extends StatelessWidget {
             ),
           ],
         ),
-        onPressed: () {},
+        onPressed: () async {
+          final stripeService = new StripeService();
+          final state = BlocProvider.of<PayBloc>(context).state;
+
+          final resp = await stripeService.paymentWithAppleGooglePlay(
+            amount: state.amountPayString,
+            currency: state.money,
+          );
+        },
       ),
     );
   }

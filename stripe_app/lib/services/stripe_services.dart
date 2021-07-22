@@ -28,26 +28,24 @@ class StripeService {
     ));
   }
 
-  Future paymentWithCardExist({
+  Future<StripeCustomResponse> paymentWithCardExist({
     required String amount,
     required String currency,
     required CreditCard card,
-  }) async {}
-
-  Future<StripeCustomResponse> paymentWithNewCard({
-    required String amount,
-    required String currency,
   }) async {
     try {
       //Create a form for create a new credit card
-      final paymentMethod = await StripePayment.paymentRequestWithCardForm(
-        CardFormPaymentRequest(),
+      final paymentMethod = await StripePayment.createPaymentMethod(
+        PaymentMethodRequest(card: card),
       );
 
-      final resp =
-          await this._createPaymentIntent(amount: amount, currency: currency);
+      final resp = await this._makePayment(
+        amount: amount,
+        currency: currency,
+        paymentMethod: paymentMethod,
+      );
 
-      return StripeCustomResponse(ok: true, msg: '');
+      return resp;
     } catch (e) {
       return StripeCustomResponse(
         ok: false,
@@ -56,10 +54,71 @@ class StripeService {
     }
   }
 
-  Future paymentWithAppleGooglePlay({
+  Future<StripeCustomResponse> paymentWithNewCard(
+      {required String amount, required String currency}) async {
+    try {
+      //Create a form for create a new credit card
+      final paymentMethod = await StripePayment.paymentRequestWithCardForm(
+        CardFormPaymentRequest(),
+      );
+
+      final resp = await this._makePayment(
+        amount: amount,
+        currency: currency,
+        paymentMethod: paymentMethod,
+      );
+
+      return resp;
+    } catch (e) {
+      return StripeCustomResponse(
+        ok: false,
+        msg: e.toString(),
+      );
+    }
+  }
+
+  Future<StripeCustomResponse> paymentWithAppleGooglePlay({
     required String amount,
     required String currency,
-  }) async {}
+  }) async {
+    try {
+      final newAmount = double.parse(amount) / 100;
+
+      final token = await StripePayment.paymentRequestWithNativePay(
+        androidPayOptions: AndroidPayPaymentRequest(
+            currencyCode: currency, totalPrice: amount),
+        applePayOptions: ApplePayPaymentOptions(
+          countryCode: 'MEX',
+          currencyCode: currency,
+          items: [
+            ApplePayItem(
+              label: 'Super producto 1',
+              amount: '$newAmount',
+            )
+          ],
+        ),
+      );
+
+      final paymentMethod = await StripePayment.createPaymentMethod(
+          PaymentMethodRequest(card: CreditCard(token: token.tokenId)));
+
+      final resp = await this._makePayment(
+        amount: amount,
+        currency: currency,
+        paymentMethod: paymentMethod,
+      );
+
+      await StripePayment.completeNativePayRequest();
+
+      return resp;
+    } catch (e) {
+      print('ERROR en intento: ${e.toString()}');
+      return StripeCustomResponse(
+        ok: false,
+        msg: e.toString(),
+      );
+    }
+  }
 
   Future<PaymentIntentResponse> _createPaymentIntent({
     required String amount,
@@ -82,9 +141,34 @@ class StripeService {
     }
   }
 
-  Future _makePayment({
+  Future<StripeCustomResponse> _makePayment({
     required String amount,
     required String currency,
     required PaymentMethod paymentMethod,
-  }) async {}
+  }) async {
+    try {
+      //Create the intent
+      final paymentIntent = await this._createPaymentIntent(
+        amount: amount,
+        currency: currency,
+      );
+
+      final paymentResult = await StripePayment.confirmPaymentIntent(
+        PaymentIntent(
+          clientSecret: paymentIntent.clientSecret,
+          paymentMethodId: paymentMethod.id,
+        ),
+      );
+
+      if (paymentResult.status == 'succeeded') {
+        return StripeCustomResponse(ok: true, msg: '');
+      } else {
+        return StripeCustomResponse(
+            ok: false, msg: 'Fallo: ${paymentResult.status}');
+      }
+    } catch (e) {
+      print(e.toString());
+      return StripeCustomResponse(ok: false, msg: e.toString());
+    }
+  }
 }
